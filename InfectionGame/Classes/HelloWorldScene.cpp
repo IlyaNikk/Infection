@@ -34,46 +34,7 @@ bool HelloWorld::init()
     Size visibleSize = Director::getInstance()->getVisibleSize();
     Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
-    // 2. add a menu item with "X" image, which is clicked to quit the program
-    //    you may modify it.
 
-    // add a "close" icon to exit the progress. it's an autorelease object
-   /* auto closeItem = MenuItemImage::create(
-                                           "CloseNormal.png",
-                                           "CloseSelected.png",
-                                           CC_CALLBACK_1(HelloWorld::menuCloseCallback, this));
-
-	closeItem->setPosition(Vec2(origin.x + visibleSize.width - closeItem->getContentSize().width/2 ,
-                                origin.y + closeItem->getContentSize().height/2));
-
-    // create menu, it's an autorelease object
-    auto menu = Menu::create(closeItem, NULL);
-    menu->setPosition(Vec2::ZERO);
-    this->addChild(menu, 1);
-
-    // 3. add your codes below...
-
-    // add a label shows "Hello World"
-    // create and initialize a label
-    
-    auto label = Label::createWithTTF("Hello World", "fonts/Marker Felt.ttf", 24);
-
-    // position the label on the center of the screen
-    label->setPosition(Vec2(origin.x + visibleSize.width/2,
-                            origin.y + visibleSize.height - label->getContentSize().height));
-
-    // add the label as a child to this layer
-    this->addChild(label, 1);
-
-    // add "HelloWorld" splash screen"
-    auto sprite = Sprite::create("HelloWorld.png");
-
-    // position the sprite on the center of the screen
-    sprite->setPosition(Vec2(visibleSize.width/2 + origin.x, visibleSize.height/2 + origin.y));
-
-    // add the sprite as a child to this layer
-    this->addChild(sprite, 0);
-*/
  //создаем фон
     auto Background = Sprite::create("background.png");
     Background->setAnchorPoint(Vec2(0,0));
@@ -88,40 +49,22 @@ bool HelloWorld::init()
 //рандомно генерируем пустые фишки
     int Step = Field->getContentSize().height / 10;
 
+    FieldAndPoints** NewField = new FieldAndPoints* [10];
     int StartX = 75;
     int StartY = 75;
-    auto Act = Sequence::create(nullptr);
-    for(int i = 0; i < 10; ++i) {
-        int None = rand() % 10;
-        for(int j = 0; j < 10; ++j ){
-            if(j != None) {
-                auto EmptyPoint = Sprite::create("Empty.png");
-                Field->addChild(EmptyPoint);
-                EmptyPoint->setOpacity(0);
-                EmptyPoint->setPosition(0, 0);
+    NewField = BuildField(NewField,Step,Field,StartX, StartY);
 
-                auto fadeIn = FadeIn::create(1.0f);
-                auto move = MoveTo::create(1, Point(StartX, StartY));
-
-                auto spawn = Spawn::createWithTwoActions(fadeIn, move);
-                EmptyPoint->runAction(spawn);
-            }
-            StartX += Step;
-            }
-        StartX = 75;
-        StartY += Step;
-        }
 
 //задаем счет для синего и зеленого игрока
-    string GreenScore  = "0000";
-    auto GreenCount = Label::createWithTTF(GreenScore,"/home/ilya/Infection/InfectionGame/Resources/fonts/MarkerFelt.ttf",32);
+    string GreenScore  = "1234";
+    auto GreenCount = Label::createWithTTF(GreenScore,"/home/ilya/Infection/InfectionGame/Resources/fonts/Magneto-Bold.ttf",32);
     GreenCount->setPosition(Vec2(origin.x + 40 ,
                             origin.y + visibleSize.height - GreenCount->getContentSize().height));
     GreenCount->setColor(ccc3(0,255,0));
     this->addChild(GreenCount,1);
 
-    string BlueScore  = "0000";
-    auto BlueCount = Label::createWithTTF(BlueScore,"/home/ilya/Infection/InfectionGame/Resources/fonts/MarkerFelt.ttf",32);
+    string BlueScore  = "1234";
+    auto BlueCount = Label::createWithTTF(BlueScore,"/home/ilya/Infection/InfectionGame/Resources/fonts/Old-English-Text-MT-Regular.ttf",32);
     BlueCount->setPosition(Vec2(origin.x + 1240 ,
                             origin.y + visibleSize.height - BlueCount->getContentSize().height));
     BlueCount->setColor(ccc3(0,0,255));
@@ -146,20 +89,21 @@ bool HelloWorld::init()
     GreenPoint->setOpacity(0);
 
 
-
+    Point StartLocation;
     //даем возможность перетаскивать фишки
     auto listener1 = EventListenerTouchOneByOne::create();
     // When "swallow touches" is true, then returning 'true' from the onTouchBegan method will "swallow" the touch event, preventing other listeners from using it.
     listener1->setSwallowTouches(true);
 
     // Example of using a lambda expression to implement onTouchBegan event callback function
-    listener1->onTouchBegan = [](Touch* touch, Event* event){
+    listener1->onTouchBegan = [StartLocation](Touch* touch, Event* event) mutable{
 //        GreenPoint->clone();
         // event->getCurrentTarget() returns the *listener's* sceneGraphPriority node.
         auto target = static_cast<Sprite*>(event->getCurrentTarget());
 
         //Get the position of the current point relative to the button
         Point locationInNode = target->convertToNodeSpace(touch->getLocation());
+        StartLocation = touch->getLocation();
         Size s = target->getContentSize();
         Rect rect = Rect(0, 0, s.width, s.height);
 
@@ -180,12 +124,17 @@ bool HelloWorld::init()
     };
 
     //Process the touch end event
-    listener1->onTouchEnded = [=](Touch* touch, Event* event){
+    listener1->onTouchEnded = [=,StartLocation](Touch* touch, Event* event){
         auto target = static_cast<Sprite*>(event->getCurrentTarget());
         target->setOpacity(255);
         Point locationInNode = target->getPosition();
-        float* newLocate = newLocation(locationInNode.x,locationInNode.y,Step);
-
+        int* CurrentStop = CanStopHere(locationInNode,StartX,StartY);
+        int Index1 = CurrentStop[0];
+        int Index2 = CurrentStop[1];
+        float* newLocate;
+        if(NewField[Index1][Index2].GetEmpty())
+            newLocate = newLocation(StartLocation,locationInNode,Step,true);
+        else newLocate = newLocation(StartLocation,locationInNode,Step,false);
         auto Move = MoveTo::create(0.5,Point(newLocate[0], newLocate[1]));
         target->runAction(Move);
         //Reset zOrder and the display sequence will change
