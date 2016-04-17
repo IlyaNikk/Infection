@@ -49,7 +49,7 @@ bool HelloWorld::init()
 //рандомно генерируем пустые фишки
     int Step = Field->getContentSize().height / 10;
 
-    FieldAndPoints** NewField = new FieldAndPoints* [10];
+    ColorPoints** NewField = new ColorPoints* [10];
     int StartX = 75;
     int StartY = 75;
     NewField = BuildField(NewField,Step,Field,StartX, StartY);
@@ -78,32 +78,32 @@ bool HelloWorld::init()
     GreenPoint->setOpacity(0);
     auto fadeIn = FadeIn::create(0.4f);
     GreenPoint->runAction(fadeIn);
-/*
-    auto BluePoint = Sprite::create("Blue.png");
-    BluePoint->setScale(0.95);
-    Field->addChild(BluePoint);
-    BluePoint->setPosition(240,380);
-*/
+
     this->addChild(Background,0);
 
     GreenPoint->setOpacity(0);
 
 
-    Point StartLocation;
+    Point* StartLocation = new Point [1];
+
     //даем возможность перетаскивать фишки
     auto listener1 = EventListenerTouchOneByOne::create();
     // When "swallow touches" is true, then returning 'true' from the onTouchBegan method will "swallow" the touch event, preventing other listeners from using it.
     listener1->setSwallowTouches(true);
 
     // Example of using a lambda expression to implement onTouchBegan event callback function
-    listener1->onTouchBegan = [StartLocation](Touch* touch, Event* event) mutable{
+    listener1->onTouchBegan = [NewField, StartLocation, StartX, StartY, Field](Touch* touch, Event* event) mutable{
 //        GreenPoint->clone();
         // event->getCurrentTarget() returns the *listener's* sceneGraphPriority node.
         auto target = static_cast<Sprite*>(event->getCurrentTarget());
 
         //Get the position of the current point relative to the button
         Point locationInNode = target->convertToNodeSpace(touch->getLocation());
-        StartLocation = touch->getLocation();
+        StartLocation[0] = Field->convertToNodeSpace(touch->getLocation());
+        int* CurrentStop = CanStopHere(StartLocation[0],StartX,StartY, NewField[0][0].GetStep());
+        int Index1 = CurrentStop[0];
+        int Index2 = CurrentStop[1];
+        StartLocation[0] = NewField[Index2][Index1].GetCoordinate();
         Size s = target->getContentSize();
         Rect rect = Rect(0, 0, s.width, s.height);
 
@@ -124,25 +124,25 @@ bool HelloWorld::init()
     };
 
     //Process the touch end event
-    listener1->onTouchEnded = [=,StartLocation](Touch* touch, Event* event){
+    listener1->onTouchEnded = [=,StartLocation, NewField](Touch* touch, Event* event){
         auto target = static_cast<Sprite*>(event->getCurrentTarget());
         target->setOpacity(255);
         Point locationInNode = target->getPosition();
-        int* CurrentStop = CanStopHere(locationInNode,StartX,StartY);
+        int* CurrentStop = CanStopHere(locationInNode,StartX,StartY, NewField[0][0].GetStep());
         int Index1 = CurrentStop[0];
         int Index2 = CurrentStop[1];
-        float* newLocate;
-        if(NewField[Index1][Index2].GetEmpty())
-            newLocate = newLocation(StartLocation,locationInNode,Step,true);
-        else newLocate = newLocation(StartLocation,locationInNode,Step,false);
-        auto Move = MoveTo::create(0.5,Point(newLocate[0], newLocate[1]));
+        Point newLocate;
+        if(NewField[Index2][Index1].GetEmpty())
+            newLocate = newLocation(StartLocation[0],locationInNode,Step,true);
+        else newLocate = newLocation(StartLocation[0],locationInNode,Step,false);
+        auto Move = MoveTo::create(0.5,newLocate);
         target->runAction(Move);
         //Reset zOrder and the display sequence will change
     };
 
     _eventDispatcher->addEventListenerWithSceneGraphPriority(listener1, GreenPoint);
 
-
+    delete[] StartLocation;
     return true;
 }
 
