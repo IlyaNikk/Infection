@@ -37,21 +37,24 @@ bool HelloWorld::init()
 
  //создаем фон
     auto Background = Sprite::create("background.png");
-    Background->setAnchorPoint(Vec2(0,0));
-    Background->setPosition(0,0);
+    Background->setPosition(Point(visibleSize.width / 2 + origin.x, visibleSize.height / 2 + origin.y));
+    Background->setScaleX(visibleSize.width / Background->getContentSize().width);
+    Background->setScaleY(visibleSize.height / Background->getContentSize().height);
+    this->addChild(Background,0);
 
 //устанваливаем поле
     auto Field = Sprite::create("EmptyField.png");
     Field->setScale(0.5);
-    Background->addChild(Field);
-    Field->setPosition(640,358);
+    Field->setPosition(Point(visibleSize.width / 2 + origin.x, visibleSize.height / 2 + origin.y));
+    this->addChild(Field);
+
 
 //рандомно генерируем пустые фишки
     int Step = Field->getContentSize().height / 10;
 
     ColorPoints** NewField = new ColorPoints* [10];
-    int StartX = 75;
-    int StartY = 75;
+    int StartX = Step / 2 + 4;
+    int StartY = Step / 2 + 4;
     NewField = BuildField(NewField,Step,Field,StartX, StartY);
 
 
@@ -79,7 +82,6 @@ bool HelloWorld::init()
     auto fadeIn = FadeIn::create(0.4f);
     GreenPoint->runAction(fadeIn);
 
-    this->addChild(Background,0);
 
     GreenPoint->setOpacity(0);
 
@@ -124,7 +126,7 @@ bool HelloWorld::init()
     };
 
     //Process the touch end event
-    listener1->onTouchEnded = [=,StartLocation, NewField](Touch* touch, Event* event){
+    listener1->onTouchEnded = [StartX,StartY,Step,StartLocation, NewField](Touch* touch, Event* event){
         auto target = static_cast<Sprite*>(event->getCurrentTarget());
         target->setOpacity(255);
         Point locationInNode = target->getPosition();

@@ -88,7 +88,8 @@ Point newLocation(Point Start, Point End, int Step, bool Cant){
     return Result;
 }
 
-ColorPoints** BuildField(ColorPoints** NewField, int Step, auto Field, int StartX, int StartY){
+ColorPoints** BuildField(ColorPoints** NewField, int Step, Sprite* Field, int StartX, int StartY){
+    int Start = StartX;
     for(int i = 0; i < 10; ++i) {
         int None = rand() % 10;
         NewField[i] = new ColorPoints [10];
@@ -115,7 +116,7 @@ ColorPoints** BuildField(ColorPoints** NewField, int Step, auto Field, int Start
             else NewField[i][j].setEmpty(true);
             StartX += Step;
         }
-        StartX = 75;
+        StartX = Start;
         StartY += Step;
     }
     return NewField;
