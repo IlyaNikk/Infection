@@ -54,38 +54,49 @@ ColorPoints::~ColorPoints(){; }
 //по координатам находим индексы фишки в массиве
 int* CanStopHere(Point locationInNode, int StartX, int StartY,int Step){
     int Result[2];
-    Result[0] = (int)(locationInNode.x - StartX) / Step;
-    Result[1] = (int)(locationInNode.y - StartY) / Step;
+    float PromResult[2];
+    PromResult[0] = (locationInNode.x - StartX) / Step;
+    PromResult[1] = (locationInNode.y - StartY) / Step;
+    float X =  (PromResult[0] * 10) ;
+    X = (int)X % 10;
+    float Y =  (PromResult[1] * 10);
+    Y = (int)Y % 10;
+    if (X >= 4)
+        ++PromResult[0];
+    if (Y >= 4)
+        ++PromResult[1];
+    Result[0] = PromResult[0];
+    Result[1] = PromResult[1];
     return Result;
 }
 
 //проверяем куда мы передвигаем фишку и делаем это, если возможно
-Point newLocation(Point Start, Point End, int Step, bool Cant){
+bool newLocation(Point Start, Point End, int Step, bool Cant){
     Point Result;
     Result.x = Start.x;
     Result.y = Start.y;
     if(Cant){
-        ;
+        return false;
     }
     else
     {
         float ConditionX = (End.x - Start.x ) / Step;
         float ConditionY = (End.y - Start.y ) / Step;
         if (abs(ConditionX) > 2 || abs(ConditionY) > 2) {
-           return Result;
+           return false;
         }
         else if(ConditionX == 0 && ConditionY == 0)
-            return Result;
-        float X = (int) (ConditionX * 10) % 10;
-        float Y = (int) (ConditionY * 10) % 10;
+            return false;
+        /*float X =  ((int)ConditionX * 10) % 10;
+        float Y =  ((int)ConditionY * 10) % 10;
         if (X >= 6)
             ++ConditionX;
         if (Y >= 6)
             ++ConditionY;
         Result.x =  ((int)ConditionX) * Step + 75;
-        Result.y =  ((int)ConditionY) * Step + 75;
+        Result.y =  ((int)ConditionY) * Step + 75;*/
     }
-    return Result;
+    return true;
 }
 
 ColorPoints** BuildField(ColorPoints** NewField, int Step, Sprite* Field, int StartX, int StartY){

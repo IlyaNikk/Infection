@@ -126,19 +126,26 @@ bool HelloWorld::init()
     };
 
     //Process the touch end event
-    listener1->onTouchEnded = [StartX,StartY,Step,StartLocation, NewField](Touch* touch, Event* event){
+    listener1->onTouchEnded = [Field,StartX,StartY,Step,StartLocation, NewField](Touch* touch, Event* event){
         auto target = static_cast<Sprite*>(event->getCurrentTarget());
         target->setOpacity(255);
-        Point locationInNode = target->getPosition();
+        Point locationInNode =target->getPosition();
         int* CurrentStop = CanStopHere(locationInNode,StartX,StartY, NewField[0][0].GetStep());
         int Index1 = CurrentStop[0];
         int Index2 = CurrentStop[1];
-        Point newLocate;
+        bool newLocate;
         if(NewField[Index2][Index1].GetEmpty())
-            newLocate = newLocation(StartLocation[0],locationInNode,Step,true);
-        else newLocate = newLocation(StartLocation[0],locationInNode,Step,false);
-        auto Move = MoveTo::create(0.5,newLocate);
-        target->runAction(Move);
+            newLocate = newLocation(StartLocation[0],NewField[Index2][Index1].GetCoordinate(),Step,true);
+        else newLocate = newLocation(StartLocation[0],NewField[Index2][Index1].GetCoordinate(),Step,false);
+        if(newLocate) {
+            auto Move = MoveTo::create(0.5, NewField[Index2][Index1].GetCoordinate());
+            target->runAction(Move);
+        }
+        else {
+            auto Move = MoveTo::create(0.5, StartLocation[0]);
+            target->runAction(Move);
+        }
+
         //Reset zOrder and the display sequence will change
     };
 
