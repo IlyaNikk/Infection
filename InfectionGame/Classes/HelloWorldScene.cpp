@@ -73,17 +73,18 @@ bool HelloWorld::init()
     BlueCount->setColor(ccc3(0,0,255));
     this->addChild(BlueCount,1);
 
-    //ставим зеленное поле
+    //ставим зеленную фишку
+    int Players = 1;
     auto GreenPoint = Sprite::create("Green.png");
-    GreenPoint->setScale(0.95);
-    Field->addChild(GreenPoint,3);
-    GreenPoint->setPosition(75,75);
-    GreenPoint->setOpacity(0);
-    auto fadeIn = FadeIn::create(0.4f);
-    GreenPoint->runAction(fadeIn);
+    auto BluePoint = Sprite::create("Blue.png");
+    char Color = 'g';
+    for(int i = 0; i < Players; ++i) {
+        if(i == 0) {
+            StarterPoint(NewField,Field, GreenPoint, Color, StartX, StartY);
+            //Color = 'b';
+        }
+    }
 
-
-    GreenPoint->setOpacity(0);
 
 
     Point* StartLocation = new Point [1];
@@ -94,21 +95,34 @@ bool HelloWorld::init()
     listener1->setSwallowTouches(true);
 
     // Example of using a lambda expression to implement onTouchBegan event callback function
-    listener1->onTouchBegan = [NewField, StartLocation, StartX, StartY, Field](Touch* touch, Event* event) mutable{
-//        GreenPoint->clone();
+    listener1->onTouchBegan = [NewField, StartLocation, StartX, StartY, Field, GreenPoint](Touch* touch, Event* event) mutable{
+
         // event->getCurrentTarget() returns the *listener's* sceneGraphPriority node.
         auto target = static_cast<Sprite*>(event->getCurrentTarget());
 
         //Get the position of the current point relative to the button
         Point locationInNode = target->convertToNodeSpace(touch->getLocation());
         StartLocation[0] = Field->convertToNodeSpace(touch->getLocation());
-        int* CurrentStop = CanStopHere(StartLocation[0],StartX,StartY, NewField[0][0].GetStep());
+        int* CurrentStop = new int [2];
+        //ищем координаты начала движения и запоминаем их
+        CurrentStop =  CanStopHere(StartLocation[0],StartX,StartY, NewField[0][0].GetStep(), CurrentStop);
         int Index1 = CurrentStop[0];
         int Index2 = CurrentStop[1];
         StartLocation[0] = NewField[Index2][Index1].GetCoordinate();
         Size s = target->getContentSize();
-        Rect rect = Rect(0, 0, s.width, s.height);
 
+        if(!NewField[Index2][Index1].GetEmptyColor())
+            return false;
+
+        //ставим копию фишки
+        Sprite *clonedSprite = Sprite::createWithTexture(GreenPoint->getTexture());
+        clonedSprite->setScale(GreenPoint->getScaleX(), GreenPoint->getScaleY());
+        clonedSprite->setRotation(GreenPoint ->getRotation());
+        clonedSprite->setPosition(StartLocation[0]);
+        Field->addChild(clonedSprite, 3);
+
+        Rect rect = Rect(0, 0, s.width, s.height);
+        delete[] CurrentStop;
         //Check the click area
         if (rect.containsPoint(locationInNode))
         {
@@ -126,17 +140,23 @@ bool HelloWorld::init()
     };
 
     //Process the touch end event
-    listener1->onTouchEnded = [Field,StartX,StartY,Step,StartLocation, NewField](Touch* touch, Event* event){
+    listener1->onTouchEnded = [Field,StartX,StartY,Step,StartLocation, Color, NewField](Touch* touch, Event* event){
         auto target = static_cast<Sprite*>(event->getCurrentTarget());
         target->setOpacity(255);
         Point locationInNode =target->getPosition();
-        int* CurrentStop = CanStopHere(locationInNode,StartX,StartY, NewField[0][0].GetStep());
+
+        //ищем кординаты окончания движения и проверяем можем ли мы там остановиться
+        int* CurrentStop = new int [2];
+        CurrentStop = CanStopHere(locationInNode,StartX,StartY, NewField[0][0].GetStep(), CurrentStop);
         int Index1 = CurrentStop[0];
         int Index2 = CurrentStop[1];
         bool newLocate;
-        if(NewField[Index2][Index1].GetEmpty())
-            newLocate = newLocation(StartLocation[0],NewField[Index2][Index1].GetCoordinate(),Step,true);
-        else newLocate = newLocation(StartLocation[0],NewField[Index2][Index1].GetCoordinate(),Step,false);
+        if(!NewField[Index2][Index1].GetEmptyColor()) {
+            if (NewField[Index2][Index1].GetEmpty())
+                newLocate = newLocation(StartLocation[0], NewField[Index2][Index1].GetCoordinate(), Step, true);
+            else newLocate = newLocation(StartLocation[0], NewField[Index2][Index1].GetCoordinate(), Step, false);
+        }
+        else newLocate = false;
         if(newLocate) {
             auto Move = MoveTo::create(0.5, NewField[Index2][Index1].GetCoordinate());
             target->runAction(Move);
@@ -145,7 +165,14 @@ bool HelloWorld::init()
             auto Move = MoveTo::create(0.5, StartLocation[0]);
             target->runAction(Move);
         }
+        auto EmptyPoint = Sprite::create("Empty.png");
+        NewField[Index2][Index1] = RemovePoint(NewField[Index2][Index1],Field,EmptyPoint,
+                                               StartLocation[0], NewField[Index2][Index1].GetCoordinate(),
+                                               NewField[Index2][Index1].GetStep());
+        NewField[Index2][Index1].SetColor(Color);
+        NewField[Index2][Index1].SetColorEmpty(true);
 
+        delete[] CurrentStop;
         //Reset zOrder and the display sequence will change
     };
 
