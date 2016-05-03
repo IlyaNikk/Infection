@@ -1,5 +1,5 @@
 #include "HelloWorldScene.h"
-#include "string"
+#include <string>
 #include <vector>
 #include <FieldAndPoints.h>
 
@@ -53,133 +53,60 @@ bool HelloWorld::init()
     int Step = Field->getContentSize().height / 10;
 
     ColorPoints** NewField = new ColorPoints* [10];
-    int StartX = Step / 2 + 4;
-    int StartY = Step / 2 + 4;
-    NewField = BuildField(NewField,Step,Field,StartX, StartY);
+    int* StartXGreen = new int [1];
+    StartXGreen[0] = Step / 2 + 4;
+    int* StartYGreen = new int [1];
+    StartYGreen[0] = Step / 2 + 4;
+
+    NewField = BuildField(NewField,Step,Field,StartXGreen[0], StartYGreen[0]);
 
 
 //задаем счет для синего и зеленого игрока
-    string GreenScore  = "1234";
-    auto GreenCount = Label::createWithTTF(GreenScore,"/home/ilya/Infection/InfectionGame/Resources/fonts/Magneto-Bold.ttf",32);
-    GreenCount->setPosition(Vec2(origin.x + 40 ,
+    int* GreenScore = new int [1]();
+    ++GreenScore[0];
+    auto GreenCount = Label::createWithTTF(to_string(GreenScore[0]),"/home/ilya/Infection/InfectionGame/Resources/fonts/Magneto-Bold.ttf",32);
+    GreenCount->setPosition(Vec2(origin.x + Step ,
                             origin.y + visibleSize.height - GreenCount->getContentSize().height));
     GreenCount->setColor(ccc3(0,255,0));
+    GreenCount->setTag(222);
     this->addChild(GreenCount,1);
 
-    string BlueScore  = "1234";
-    auto BlueCount = Label::createWithTTF(BlueScore,"/home/ilya/Infection/InfectionGame/Resources/fonts/Old-English-Text-MT-Regular.ttf",32);
-    BlueCount->setPosition(Vec2(origin.x + 1240 ,
+    int* BlueScore  = new int[1]();
+    ++BlueScore[0];
+    auto BlueCount = Label::createWithTTF(to_string(BlueScore[0]),"/home/ilya/Infection/InfectionGame/Resources/fonts/Magneto-Bold.ttf",32);
+    BlueCount->setPosition(Vec2(origin.x + visibleSize.width - Step ,
                             origin.y + visibleSize.height - BlueCount->getContentSize().height));
     BlueCount->setColor(ccc3(0,0,255));
+    GreenCount->setTag(333);
     this->addChild(BlueCount,1);
 
+    Point location = Point(Step / 2 + 4, Step / 2 + 4);
+
     //ставим зеленную фишку
-    int Players = 1;
+    int Players = 2;
     auto GreenPoint = Sprite::create("Green.png");
     auto BluePoint = Sprite::create("Blue.png");
-    char Color = 'g';
+    char Color ;
     for(int i = 0; i < Players; ++i) {
         if(i == 0) {
-            StarterPoint(NewField,Field, GreenPoint, Color, StartX, StartY);
-            //Color = 'b';
+            Color = 'g';
+            Point *StartGreenLocation = new Point[1];
+            StarterPoint(NewField, Field, GreenPoint, Color, StartXGreen, StartYGreen, GreenScore, GreenCount, StartGreenLocation, location);
+        }
+        if(i == 1){
+            Color = 'b';
+            Point *StartBlueLocation = new Point[1];
+            int* StartXBlue = new int [1];
+            int* StartYBlue = new int [1];
+            StartXBlue[0] = location.x;
+            StartYBlue[0] = location.y;
+            location.x = location.x + 9 * NewField[0][0].GetStep();
+            location.y = location.y + 9 * NewField[0][0].GetStep();
+            StarterPoint(NewField, Field, BluePoint, Color, StartXBlue, StartYBlue, BlueScore, BlueCount, StartBlueLocation, location);
         }
     }
 
-
-
-    Point* StartLocation = new Point [1];
-
-    //даем возможность перетаскивать фишки
-    auto listener1 = EventListenerTouchOneByOne::create();
-    // When "swallow touches" is true, then returning 'true' from the onTouchBegan method will "swallow" the touch event, preventing other listeners from using it.
-    listener1->setSwallowTouches(true);
-
-    // Example of using a lambda expression to implement onTouchBegan event callback function
-    listener1->onTouchBegan = [NewField, StartLocation, StartX, StartY, Field, GreenPoint](Touch* touch, Event* event) mutable{
-
-        // event->getCurrentTarget() returns the *listener's* sceneGraphPriority node.
-        auto target = static_cast<Sprite*>(event->getCurrentTarget());
-
-        //Get the position of the current point relative to the button
-        Point locationInNode = target->convertToNodeSpace(touch->getLocation());
-        StartLocation[0] = Field->convertToNodeSpace(touch->getLocation());
-        int* CurrentStop = new int [2];
-        //ищем координаты начала движения и запоминаем их
-        CurrentStop =  CanStopHere(StartLocation[0],StartX,StartY, NewField[0][0].GetStep(), CurrentStop);
-        int Index1 = CurrentStop[0];
-        int Index2 = CurrentStop[1];
-        StartLocation[0] = NewField[Index2][Index1].GetCoordinate();
-        Size s = target->getContentSize();
-
-        if(!NewField[Index2][Index1].GetEmptyColor())
-            return false;
-
-        //ставим копию фишки
-        Sprite *clonedSprite = Sprite::createWithTexture(GreenPoint->getTexture());
-        clonedSprite->setScale(GreenPoint->getScaleX(), GreenPoint->getScaleY());
-        clonedSprite->setRotation(GreenPoint ->getRotation());
-        clonedSprite->setPosition(StartLocation[0]);
-        Field->addChild(clonedSprite, 3);
-
-        Rect rect = Rect(0, 0, s.width, s.height);
-        delete[] CurrentStop;
-        //Check the click area
-        if (rect.containsPoint(locationInNode))
-        {
-            target->setOpacity(180);
-            return true;
-        }
-        return false;
-    };
-
-    //Trigger when moving touch
-    listener1->onTouchMoved = [](Touch* touch, Event* event){
-        auto target = static_cast<Sprite*>(event->getCurrentTarget());
-        //Move the position of current button sprite
-        target->setPosition(target->getPosition() + touch->getDelta()*2);
-    };
-
-    //Process the touch end event
-    listener1->onTouchEnded = [Field,StartX,StartY,Step,StartLocation, Color, NewField](Touch* touch, Event* event){
-        auto target = static_cast<Sprite*>(event->getCurrentTarget());
-        target->setOpacity(255);
-        Point locationInNode =target->getPosition();
-
-        //ищем кординаты окончания движения и проверяем можем ли мы там остановиться
-        int* CurrentStop = new int [2];
-        CurrentStop = CanStopHere(locationInNode,StartX,StartY, NewField[0][0].GetStep(), CurrentStop);
-        int Index1 = CurrentStop[0];
-        int Index2 = CurrentStop[1];
-        bool newLocate;
-        if(!NewField[Index2][Index1].GetEmptyColor()) {
-            if (NewField[Index2][Index1].GetEmpty())
-                newLocate = newLocation(StartLocation[0], NewField[Index2][Index1].GetCoordinate(), Step, true);
-            else newLocate = newLocation(StartLocation[0], NewField[Index2][Index1].GetCoordinate(), Step, false);
-        }
-        else newLocate = false;
-        if(newLocate) {
-            auto Move = MoveTo::create(0.5, NewField[Index2][Index1].GetCoordinate());
-            target->runAction(Move);
-        }
-        else {
-            auto Move = MoveTo::create(0.5, StartLocation[0]);
-            target->runAction(Move);
-        }
-        auto EmptyPoint = Sprite::create("Empty.png");
-        NewField[Index2][Index1] = RemovePoint(NewField[Index2][Index1],Field,EmptyPoint,
-                                               StartLocation[0], NewField[Index2][Index1].GetCoordinate(),
-                                               NewField[Index2][Index1].GetStep());
-        NewField[Index2][Index1].SetColor(Color);
-        NewField[Index2][Index1].SetColorEmpty(true);
-
-        delete[] CurrentStop;
-        //Reset zOrder and the display sequence will change
-    };
-
-    _eventDispatcher->addEventListenerWithSceneGraphPriority(listener1, GreenPoint);
-
-    delete[] StartLocation;
-    return true;
+       return true;
 }
 
 
