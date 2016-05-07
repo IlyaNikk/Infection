@@ -1,7 +1,8 @@
 #include "HelloWorldScene.h"
 #include <string>
-#include <vector>
 #include <FieldAndPoints.h>
+#include "Menu.h"
+#include "Field.h"
 
 using namespace std;
 
@@ -30,79 +31,70 @@ bool HelloWorld::init()
     {
         return false;
     }
-    
-    Size visibleSize = Director::getInstance()->getVisibleSize();
-    Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
+    int Players = 2;
+    int* TotalScore = new int [4]{0,0,0,0};
+    Label** TotalCount = new Label* [4];
+    int* RecordData = new int [Players]{};
+    char* ColorTurn = new char [4]{'g','b','r','o'};
 
- //создаем фон
-    auto Background = Sprite::create("background.png");
-    Background->setPosition(Point(visibleSize.width / 2 + origin.x, visibleSize.height / 2 + origin.y));
-    Background->setScaleX(visibleSize.width / Background->getContentSize().width);
-    Background->setScaleY(visibleSize.height / Background->getContentSize().height);
-    this->addChild(Background,0);
-
-//устанваливаем поле
-    auto Field = Sprite::create("EmptyField.png");
-    Field->setScale(0.5);
-    Field->setPosition(Point(visibleSize.width / 2 + origin.x, visibleSize.height / 2 + origin.y));
-    this->addChild(Field);
-
+    GameEnviroment BackAndScore(this, Players, TotalCount, RecordData, ColorTurn);
 
 //рандомно генерируем пустые фишки
-    int Step = Field->getContentSize().height / 10;
+    int Step = BackAndScore.GetField()->getContentSize().height / 10;
+    int* StartX = new int [1];
+    StartX[0] = Step / 2 + 4;
+    int* StartY = new int [1];
+    StartY[0] = Step / 2 + 4;
+    ColorPoints** NewField = Field::getInstance(Step, BackAndScore.GetField(), StartX[0], StartY[0]);
 
-    ColorPoints** NewField = new ColorPoints* [10];
-    int* StartXGreen = new int [1];
-    StartXGreen[0] = Step / 2 + 4;
-    int* StartYGreen = new int [1];
-    StartYGreen[0] = Step / 2 + 4;
-
-    NewField = BuildField(NewField,Step,Field,StartXGreen[0], StartYGreen[0]);
-
+    Point* StartPoint = new Point [4];
+    StartPoint[0] = {(float)Step / 2 + 4, (float)Step / 2 + 4};
+    StartPoint[1] = {(float)Step / 2 + 4 + 9 * Step, (float)Step / 2 + 4 + 9 * Step};
+    StartPoint[2] = {(float)Step / 2 + 4 + 9 * Step, (float)Step / 2 + 4};
+    StartPoint[3] = {(float)Step / 2 + 4, (float)Step / 2 + 4 + 9 * Step};
 
 //задаем счет для синего и зеленого игрока
-    int* GreenScore = new int [1]();
-    ++GreenScore[0];
-    auto GreenCount = Label::createWithTTF(to_string(GreenScore[0]),"/home/ilya/Infection/InfectionGame/Resources/fonts/Magneto-Bold.ttf",32);
-    GreenCount->setPosition(Vec2(origin.x + Step ,
-                            origin.y + visibleSize.height - GreenCount->getContentSize().height));
-    GreenCount->setColor(ccc3(0,255,0));
-    GreenCount->setTag(222);
-    this->addChild(GreenCount,1);
-
-    int* BlueScore  = new int[1]();
-    ++BlueScore[0];
-    auto BlueCount = Label::createWithTTF(to_string(BlueScore[0]),"/home/ilya/Infection/InfectionGame/Resources/fonts/Magneto-Bold.ttf",32);
-    BlueCount->setPosition(Vec2(origin.x + visibleSize.width - Step ,
-                            origin.y + visibleSize.height - BlueCount->getContentSize().height));
-    BlueCount->setColor(ccc3(0,0,255));
-    GreenCount->setTag(333);
-    this->addChild(BlueCount,1);
 
     Point location = Point(Step / 2 + 4, Step / 2 + 4);
+    int* Turn = new int [1]();
 
     //ставим зеленную фишку
-    int Players = 2;
     auto GreenPoint = Sprite::create("Green.png");
     auto BluePoint = Sprite::create("Blue.png");
+    auto RedPoint = Sprite::create("Red.png");
+    auto OrangePoint = Sprite::create("Orange.png");
     char Color ;
     for(int i = 0; i < Players; ++i) {
         if(i == 0) {
             Color = 'g';
             Point *StartGreenLocation = new Point[1];
-            StarterPoint(NewField, Field, GreenPoint, Color, StartXGreen, StartYGreen, GreenScore, GreenCount, StartGreenLocation, location);
+            StarterPoint(NewField, BackAndScore.GetField(), GreenPoint, Color, StartX, StartY, TotalScore, TotalCount, StartGreenLocation, location,
+                         ColorTurn, Turn, Players);
         }
         if(i == 1){
             Color = 'b';
             Point *StartBlueLocation = new Point[1];
-            int* StartXBlue = new int [1];
-            int* StartYBlue = new int [1];
-            StartXBlue[0] = location.x;
-            StartYBlue[0] = location.y;
             location.x = location.x + 9 * NewField[0][0].GetStep();
             location.y = location.y + 9 * NewField[0][0].GetStep();
-            StarterPoint(NewField, Field, BluePoint, Color, StartXBlue, StartYBlue, BlueScore, BlueCount, StartBlueLocation, location);
+            StarterPoint(NewField, BackAndScore.GetField(), BluePoint, Color, StartX, StartY, TotalScore, TotalCount, StartBlueLocation, location,
+                         ColorTurn, Turn, Players);
+        }
+        if(i == 2){
+            Color = 'r';
+            Point *StartRedLocation = new Point[1];
+            location.x = Step / 2 + 4 + 9 * NewField[0][0].GetStep();
+            location.y = Step / 2 + 4;
+            StarterPoint(NewField, BackAndScore.GetField(), RedPoint, Color, StartX, StartY, TotalScore, TotalCount, StartRedLocation, location,
+                         ColorTurn, Turn, Players);
+        }
+        if(i == 3){
+            Color = 'o';
+            Point *StartOrangeLocation = new Point[1];
+            location.y = Step / 2 + 4 + 9 * NewField[0][0].GetStep();
+            location.x = Step / 2 + 4;
+            StarterPoint(NewField, BackAndScore.GetField(), OrangePoint, Color, StartX, StartY, TotalScore, TotalCount, StartOrangeLocation, location,
+                         ColorTurn, Turn, Players);
         }
     }
 

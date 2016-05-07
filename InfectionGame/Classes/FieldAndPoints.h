@@ -36,15 +36,15 @@ public:
     ~ColorPoints();
     ColorPoints(const ColorPoints&);
     void SetColor(char newColor){Color = newColor;};
-    void SetColorEmpty(char newIsColor){isColor = newIsColor;};
+    void SetColorEmpty(bool newIsColor){isColor = newIsColor;};
     bool GetEmptyColor(){return isColor;};
-    char GetColor(){return isColor;};
+    char GetColor(){return Color;};
     ColorPoints& operator= (const ColorPoints& other);
     //void AddListener(ColorPoints** NewField, int StartX, int StartY, Sprite* Field, int* GreenScore, Sprite* GreenPoint, Label* GreenCount);
 };
 
-void AddListener(ColorPoints** NewField, int* StartX, int* StartY, Sprite* Field, int* GreenScore, Sprite* GreenPoint, Label* GreenCount,
-                 char Color, Point* StartLocation);
+void AddListener(ColorPoints** NewField, int* StartX, int* StartY, Sprite* Field, int* GreenScore, Sprite* GreenPoint, Label** GreenCount,
+                 Point* StartLocation, char* ColorTurn, int* Turn, int Players);
 
 FieldAndPoints::FieldAndPoints() {
     IsEmpty = true;
@@ -96,27 +96,24 @@ int* CanStopHere(Point locationInNode, int StartX, int StartY,int Step, int* Res
 }
 
 //проверяем куда мы передвигаем фишку и делаем это, если возможно
-bool newLocation(Point Start, Point End, int Step, bool Cant, int* Score){
+bool newLocation(Point Start, Point End, int Step, bool Cant){
     if(!Cant)
     {
         float ConditionX = (End.x - Start.x ) / Step;
         float ConditionY = (End.y - Start.y ) / Step;
         if (abs(ConditionX) > 2 || abs(ConditionY) > 2) {
-            --Score[0];
            return false;
         }
         else if(ConditionX == 0 && ConditionY == 0) {
-            --Score[0];
             return false;
         }
     }
     else {
-        --Score[0];
         return false;
     }
     return true;
 }
-
+/*
 //строим поле
 ColorPoints** BuildField(ColorPoints** NewField, int Step, Sprite* Field, int StartX, int StartY){
     int Start = StartX;
@@ -153,20 +150,19 @@ ColorPoints** BuildField(ColorPoints** NewField, int Step, Sprite* Field, int St
     }
     return NewField;
 }
+*/
 
 //задаем игровые начальные фишки
-void StarterPoint(ColorPoints** NewField,Sprite* Field, Sprite* ColorPoint, char WhatColor, int* StartX, int* StartY, int* GreenScore, Label* GreenCount,
-                    Point* StartLocation, Point location){
+void StarterPoint(ColorPoints** NewField,Sprite* Field, Sprite* ColorPoint, char WhatColor, int* StartX, int* StartY, int* TotalScore, Label** TotalCount,
+                    Point* StartLocation, Point location, char* ColorTurn, int* Turn, int Players){
     ColorPoint->setScale(0.95);
 
     ColorPoint->setPosition(0,0);
     ColorPoint->setOpacity(0);
     auto fadeIn = FadeIn::create(0.4f);
-    auto move = MoveTo::create(2, location);
-
+    auto move = MoveTo::create(1, location);
     auto spawn = Spawn::createWithTwoActions(fadeIn, move);
     ColorPoint->runAction(spawn);
-
 
     int* CurrentStop = new int [2];
     CurrentStop =  CanStopHere(location,StartX[0],StartY[0], NewField[0][0].GetStep(), CurrentStop);
@@ -177,7 +173,7 @@ void StarterPoint(ColorPoints** NewField,Sprite* Field, Sprite* ColorPoint, char
     Clone->setPosition(0,0);
     Clone->setOpacity(0);
     Clone->setTag(Index2 * 10 + Index1 );
-    //Clone->runAction(spawn);
+    ColorPoint->setTag(Index2 * 10000 + Index1 * 1000 + 100);
 
     Field->addChild(Clone,3);
     Field->addChild(ColorPoint, 3);
@@ -186,30 +182,81 @@ void StarterPoint(ColorPoints** NewField,Sprite* Field, Sprite* ColorPoint, char
 
     NewField[Index2][Index1].SetColor(WhatColor);
     NewField[Index2][Index1].SetColorEmpty(true);
-    AddListener(NewField,StartX,StartY,Field, GreenScore, ColorPoint, GreenCount, WhatColor, StartLocation);
+
+
+    AddListener(NewField,StartX,StartY,Field, TotalScore, ColorPoint, TotalCount, StartLocation,ColorTurn, Turn, Players);
 }
 
-bool RemovePoint(ColorPoints** NewField, Sprite* Field, Sprite* ColorPoint, Point Start, Point End, int Step, int cloneIndex1, int cloneIndex2,
-                 int Index1, int Index2, bool Cant){
+bool RemovePoint(ColorPoints** NewField, int cloneIndex1,int cloneIndex2, Point Start, Point End, int Step, bool Cant){
     int BorderX = (End.x - Start.x) / Step;
     int BorderY = (End.y - Start.y) / Step;
     if((abs(BorderX) == 2 || abs(BorderY) == 2) && Cant) {
         NewField[cloneIndex2][cloneIndex1].SetColorEmpty(false);
-        Field->removeChildByTag(cloneIndex2 * 10 + cloneIndex1, false);
-
-        auto Clone = Sprite::createWithTexture(ColorPoint->getTexture());
-        Clone->setScale(ColorPoint->getScaleX(), ColorPoint->getScaleY());
-        Clone->setPosition(NewField[Index2][Index1].GetCoordinate());
-        Clone->setTag(Index2 * 10 + Index1);
-        Field->addChild(Clone, 3);
+        return true;
+    }
+    else {
+        NewField[cloneIndex2][cloneIndex1].SetColorEmpty(true);
         return false;
     }
-    else return true;
+}
+
+void SetSpriteWithClone(ColorPoints** NewField, Sprite* Field, int Index1, int Index2, Sprite* ColoredPoint, int* StartX, int* StartY, int* TotalScore,
+                            Label** TotalCount, Point* Start, char* ColorTurn, int* Turn, int Players){
+
+    auto CloneStatic = Sprite::createWithTexture(ColoredPoint->getTexture());
+    CloneStatic->setScale(ColoredPoint->getScaleX(), ColoredPoint->getScaleY());
+    CloneStatic->setRotation(ColoredPoint->getRotation());
+    CloneStatic->setPosition(NewField[Index2][Index1].GetCoordinate());
+    CloneStatic->setTag(Index2 * 10 + Index1 );
+    CloneStatic->setOpacity(0);
+    CloneStatic->runAction(FadeIn::create(1.0f));
+    Field->addChild(CloneStatic,3);
+
+    auto CloneMoving = Sprite::createWithTexture(ColoredPoint->getTexture());
+    CloneMoving->setScale(ColoredPoint->getScaleX(), ColoredPoint->getScaleY());
+    CloneMoving->setRotation(ColoredPoint->getRotation());
+    CloneMoving->setPosition(NewField[Index2][Index1].GetCoordinate());
+    CloneMoving->setTag(Index2 * 10000 + Index1 * 1000 + 100);
+    CloneMoving->setOpacity(0);
+    CloneMoving->runAction(FadeIn::create(1.0f));
+    Field->addChild(CloneMoving,3);
+
+    AddListener(NewField,StartX,StartY,Field,TotalScore, CloneMoving, TotalCount,Start, ColorTurn, Turn, Players);
+
+}
+
+void ChangeColor(ColorPoints** NewField, Sprite* Field, int Index1, int Index2, Sprite* ColoredPoint, int* StartX, int* StartY,
+                 int* TotalScore, Label** TotalCount, Point* Start, char* ColorTurn, int* Turn, int Players){
+
+    for(int i = Index2 - 1; i <= Index2 + 1; ++i){
+        if( i >= 0 && i <= 9) {
+            for (int j = Index1 - 1; j <= Index1 + 1; ++j) {
+                if( j >= 0 && j <= 9) {
+                        if (NewField[i][j].GetEmptyColor() && !NewField[i][j].GetEmpty()) {
+                            Field->removeChildByTag(i * 10 + j, false);
+                            Field->removeChildByTag(i * 10000 + j * 1000 + 100, false);
+                            SetSpriteWithClone(NewField, Field, j, i, ColoredPoint, StartX, StartY, TotalScore, TotalCount, Start, ColorTurn, Turn, Players);
+                            if(NewField[i][j].GetColor() == ColorTurn[0] && NewField[Index2][Index1].GetColor() != ColorTurn[0])
+                                --TotalScore[0];
+                            else if(NewField[i][j].GetColor() == ColorTurn[1] && NewField[Index2][Index1].GetColor() != ColorTurn[1])
+                                --TotalScore[1];
+                            else if(NewField[i][j].GetColor() == ColorTurn[2] && NewField[Index2][Index1].GetColor() != ColorTurn[2])
+                                --TotalScore[2];
+                            else if(NewField[i][j].GetColor() == ColorTurn[3] && NewField[Index2][Index1].GetColor() != ColorTurn[3])
+                                --TotalScore[3];
+                            NewField[i][j].SetColor(ColorTurn[Turn[0] % Players]);
+                            NewField[i][j].SetColorEmpty(true);
+                            ++TotalScore[Turn[0] % Players];
+                        }
+                }
+            }
+        }
+    }
 }
 
 
-void AddListener(ColorPoints** NewField, int* StartX, int* StartY, Sprite* Field, int* GreenScore, Sprite* GreenPoint, Label* GreenCount,
-                 char Color, Point* StartLocation){
+void AddListener(ColorPoints** NewField, int* StartX, int* StartY, Sprite* Field, int* TotalScore, Sprite* ColorPoint, Label** TotalCount,
+                 Point* StartLocation, char* ColorTurn, int* Turn, int Players){
 
         auto listener1 = EventListenerTouchOneByOne::create();
 
@@ -219,7 +266,7 @@ void AddListener(ColorPoints** NewField, int* StartX, int* StartY, Sprite* Field
         listener1->setSwallowTouches(true);
 
         // Example of using a lambda expression to implement onTouchBegan event callback function
-        listener1->onTouchBegan = [NewField, StartLocation, StartX, StartY, Field, GreenScore, GreenPoint](
+        listener1->onTouchBegan = [NewField, StartLocation, StartX, StartY, Field, TotalScore, ColorTurn, Turn, Players](
             Touch *touch, Event *event) mutable {
 
         // event->getCurrentTarget() returns the *listener's* sceneGraphPriority node.
@@ -238,6 +285,8 @@ void AddListener(ColorPoints** NewField, int* StartX, int* StartY, Sprite* Field
         Size s = target->getContentSize();
 
         if (!NewField[Index2][Index1].GetEmptyColor())
+            return false;
+        if (NewField[Index2][Index1].GetColor() != ColorTurn[Turn[0] % Players])
             return false;
 
         Rect rect = Rect(0, 0, s.width, s.height);
@@ -258,7 +307,7 @@ void AddListener(ColorPoints** NewField, int* StartX, int* StartY, Sprite* Field
     };
 
     //Process the touch end event
-    listener1->onTouchEnded = [Field, StartX, StartY, StartLocation, Color, NewField, GreenScore, GreenCount, GreenPoint](
+    listener1->onTouchEnded = [Field, StartX, StartY, StartLocation, NewField, TotalScore, TotalCount, ColorPoint, ColorTurn, Turn, Players](
             Touch *touch, Event *event) mutable {
         auto target = static_cast<Sprite *>(event->getCurrentTarget());
         target->setOpacity(255);
@@ -273,66 +322,55 @@ void AddListener(ColorPoints** NewField, int* StartX, int* StartY, Sprite* Field
         bool newLocate;
         if (!NewField[Index2][Index1].GetEmptyColor()) {
             if (NewField[Index2][Index1].GetEmpty()) {
-                newLocate = newLocation(StartLocation[0], NewField[Index2][Index1].GetCoordinate(), NewField[Index2][Index1].GetStep(), true,
-                                        GreenScore);
+                newLocate = newLocation(StartLocation[0], NewField[Index2][Index1].GetCoordinate(), NewField[Index2][Index1].GetStep(), true);
             }
             else
-                newLocate = newLocation(StartLocation[0], NewField[Index2][Index1].GetCoordinate(), NewField[Index2][Index1].GetStep(), false,
-                                        GreenScore);
+                newLocate = newLocation(StartLocation[0], NewField[Index2][Index1].GetCoordinate(), NewField[Index2][Index1].GetStep(), false);
         }
         else newLocate = false;
         if (newLocate) {
 
-            auto Move = MoveTo::create(0.5, NewField[Index2][Index1].GetCoordinate());
+           /* auto Move = MoveTo::create(0.5, NewField[Index2][Index1].GetCoordinate());
             target->runAction(Move);
+            */
+            //удаляем фишку если сделан шаг 2
+            int *cloneStart = new int[2];
+            cloneStart = CanStopHere(StartLocation[0], StartX[0], StartY[0], NewField[0][0].GetStep(), cloneStart);
+            int cloneIndex1 = cloneStart[0];
+            int cloneIndex2 = cloneStart[1];
+            Sprite* NewGreenPoint = Sprite::createWithTexture(ColorPoint->getTexture());
+            Field->removeChildByTag(cloneIndex2 * 10000 + cloneIndex1 * 1000 + 100);
+            Field->removeChildByTag(cloneIndex2 * 10 + cloneIndex1);
+
+            SetSpriteWithClone(NewField, Field, Index1, Index2, NewGreenPoint, StartX, StartY, TotalScore, TotalCount,
+                                                           StartLocation, ColorTurn,  Turn, Players);
+
+            if (!RemovePoint(NewField, cloneIndex1, cloneIndex2, StartLocation[0],NewField[Index2][Index1].GetCoordinate(), NewField[Index2][Index1].GetStep(),newLocate)) {
+                SetSpriteWithClone(NewField, Field, cloneIndex1, cloneIndex2, NewGreenPoint, StartX, StartY, TotalScore,
+                                                                TotalCount, StartLocation, ColorTurn, Turn, Players);
+                ++TotalScore[Turn[0] % Players];
+            }
+            ChangeColor(NewField, Field, Index1, Index2, ColorPoint, StartX, StartY, TotalScore, TotalCount, StartLocation, ColorTurn, Turn, Players);
+            NewField[Index2][Index1].SetColor(ColorTurn[Turn[0] % Players]);
+            NewField[Index2][Index1].SetColorEmpty(true);
+
+            delete[] cloneStart;
+            ++Turn[0];
         }
         else {
             auto Move = MoveTo::create(0.5, StartLocation[0]);
             target->runAction(Move);
         }
 
-        //удаляем фишку если сделан шаг 2
-        int *cloneStart = new int[2];
-        cloneStart = CanStopHere(StartLocation[0], StartX[0], StartY[0], NewField[0][0].GetStep(), cloneStart);
-        int cloneIndex1 = cloneStart[0];
-        int cloneIndex2 = cloneStart[1];
-
-
-        if (RemovePoint(NewField, Field, GreenPoint, StartLocation[0],NewField[Index2][Index1].GetCoordinate(),
-                        NewField[Index2][Index1].GetStep(), cloneIndex1, cloneIndex2, Index1, Index2, newLocate)){
-
-            ++GreenScore[0];
-
-            Sprite* CloneOnFinish = Sprite::createWithTexture(GreenPoint->getTexture());
-            CloneOnFinish->setScale(GreenPoint->getScaleX(), GreenPoint->getScaleY());
-            CloneOnFinish->setRotation(GreenPoint->getRotation());
-            CloneOnFinish->setPosition(NewField[Index2][Index1].GetCoordinate());
-            CloneOnFinish->setTag(Index2 * 10 + Index1 );
-            CloneOnFinish->setOpacity(0);
-            CloneOnFinish->runAction(FadeIn::create(1.0f));
-            Field->addChild(CloneOnFinish,3);
-
-
-            Sprite* CloneOnStart = Sprite::createWithTexture(GreenPoint->getTexture());
-            CloneOnStart->setScale(GreenPoint->getScaleX(), GreenPoint->getScaleY());
-            CloneOnStart->setRotation(GreenPoint->getRotation());
-            CloneOnStart->setPosition(NewField[cloneIndex2][cloneIndex1].GetCoordinate());
-            Field->addChild(CloneOnStart,3);
-
-            Point* Start = new Point[1];
-            Start[0] = StartLocation[0];
-            AddListener(NewField,StartX,StartY,Field,GreenScore, CloneOnStart, GreenCount,Color, Start);
-        }
-        NewField[Index2][Index1].SetColor(Color);
-        NewField[Index2][Index1].SetColorEmpty(true);
-
         //обновляем счет
-        GreenCount->setString(std::to_string(GreenScore[0]));
+        for(int i = 0; i < Players ; ++i)
+        TotalCount[i]->setString(std::to_string(TotalScore[i]));
 
-        delete[] cloneStart;
         delete[] CurrentStop;
         //Reset zOrder and the display sequence will change
     };
-    Director::getInstance()->getEventDispatcher()->addEventListenerWithSceneGraphPriority(listener1, GreenPoint);
+    Director::getInstance()->getEventDispatcher()->addEventListenerWithSceneGraphPriority(listener1, ColorPoint);
 }
+
+
 #endif //MYGAME_COORDINATE_H

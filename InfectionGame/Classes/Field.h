@@ -1,0 +1,108 @@
+//
+// Created by ilya on 5/7/16.
+//
+
+#include "cocos2d.h"
+#include "FieldAndPoints.h"
+
+#ifndef MYGAME_FIELD_H
+#define MYGAME_FIELD_H
+
+using namespace std;
+
+class Field;  // опережающее объявление
+
+class FieldDestroyer
+{
+private:
+    Field* p_instance;
+    ColorPoints** NewField;
+public:
+    ~FieldDestroyer();
+    void initialize( Field* p, ColorPoints** ThisField);
+};
+
+class Field
+{
+private:
+    static Field* p_instance ;
+    static ColorPoints** BuildedField;
+    static FieldDestroyer destroyer;
+protected:
+    Field() ;
+    Field( const Field& );
+    Field& operator=( Field& );
+    ~Field() { }
+    friend class FieldDestroyer;
+public:
+    static ColorPoints** getInstance(int Step, Sprite* SpriteField, int StartX, int StartY);
+};
+
+void BuildField(ColorPoints** NewField, int Step, Sprite* SpriteField, int StartX, int StartY);
+
+Field* Field::p_instance = 0;
+ColorPoints** Field::BuildedField = 0;
+FieldDestroyer Field::destroyer;
+
+FieldDestroyer::~FieldDestroyer() {
+    delete p_instance;
+    for(int i = 0; i < 10; ++i)
+        delete[] NewField[i];
+
+}
+
+void FieldDestroyer::initialize( Field* p , ColorPoints** ThisField) {
+    p_instance = p;
+    NewField = ThisField;
+}
+
+ColorPoints** Field::getInstance(int Step, Sprite* SpriteField, int StartX, int StartY) {
+    if(!p_instance)     {
+        p_instance = new Field ();
+        BuildField(Field::BuildedField, Step, SpriteField, StartX, StartY);
+        destroyer.initialize(p_instance, Field::BuildedField);
+    }
+    return Field::BuildedField;
+}
+
+Field::Field() {
+    Field::BuildedField = new ColorPoints* [10];
+    for(int i = 0; i < 10; ++i)
+        Field::BuildedField[i] = new ColorPoints [10];
+}
+
+void BuildField(ColorPoints** NewField, int Step, Sprite* Field, int StartX, int StartY){
+    int Start = StartX;
+    for(int i = 0; i < 10; ++i) {
+        int None = rand() % 10;
+        while ((i == 0 || i == 9) && (None == 0 || None ==9))
+            None = rand() % 10;
+        for(int j = 0; j < 10; ++j ){
+            NewField[i][j].SetStep(Step);
+            auto EmptyPoint = Sprite::create("Empty.png");
+            if(j != None) {
+                Point CurrentLocation;
+                CurrentLocation.x = StartX;
+                CurrentLocation.y = StartY;
+                NewField[i][j].setEmpty(false);
+                NewField[i][j].SetCoordinate(CurrentLocation);
+                NewField[i][j].SetStep(Step);
+                Field->addChild(EmptyPoint);
+                EmptyPoint->setOpacity(0);
+                EmptyPoint->setPosition(0, 0);
+
+                auto fadeIn = FadeIn::create(1.0f);
+                auto move = MoveTo::create(1, Point(StartX, StartY));
+
+                auto spawn = Spawn::createWithTwoActions(fadeIn, move);
+                EmptyPoint->runAction(spawn);
+            }
+            else NewField[i][j].setEmpty(true);
+            StartX += Step;
+        }
+        StartX = Start;
+        StartY += Step;
+    }
+}
+
+#endif //MYGAME_FIELD_H
