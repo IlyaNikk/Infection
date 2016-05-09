@@ -78,18 +78,19 @@ void BuildField(ColorPoints** NewField, int Step, Sprite* Field, int StartX, int
         while ((i == 0 || i == 9) && (None == 0 || None ==9))
             None = rand() % 10;
         for(int j = 0; j < 10; ++j ){
-            NewField[i][j].SetStep(Step);
             auto EmptyPoint = Sprite::create("Empty.png");
             if(j != None) {
                 Point CurrentLocation;
                 CurrentLocation.x = StartX;
                 CurrentLocation.y = StartY;
+                NewField[i][j].SetStartX(StartX);
+                NewField[i][j].SetStartY(StartY);
                 NewField[i][j].setEmpty(false);
                 NewField[i][j].SetCoordinate(CurrentLocation);
                 NewField[i][j].SetStep(Step);
                 Field->addChild(EmptyPoint);
                 EmptyPoint->setOpacity(0);
-                EmptyPoint->setPosition(0, 0);
+                EmptyPoint->setPosition(5 * Step, 5 * Step);
 
                 auto fadeIn = FadeIn::create(1.0f);
                 auto move = MoveTo::create(1, Point(StartX, StartY));

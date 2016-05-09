@@ -40,6 +40,8 @@ bool HelloWorld::init()
 
     GameEnviroment BackAndScore(this, Players, TotalCount, RecordData, ColorTurn);
 
+    for(int i = 0; i < Players; ++i)
+        ++TotalScore[i];
 //рандомно генерируем пустые фишки
     int Step = BackAndScore.GetField()->getContentSize().height / 10;
     int* StartX = new int [1];
@@ -64,49 +66,36 @@ bool HelloWorld::init()
     auto BluePoint = Sprite::create("Blue.png");
     auto RedPoint = Sprite::create("Red.png");
     auto OrangePoint = Sprite::create("Orange.png");
+    Point* StartLocation = new Point [1];
     char Color ;
     for(int i = 0; i < Players; ++i) {
         if(i == 0) {
             Color = 'g';
-            Point *StartGreenLocation = new Point[1];
-            StarterPoint(NewField, BackAndScore.GetField(), GreenPoint, Color, StartX, StartY, TotalScore, TotalCount, StartGreenLocation, location,
+            StarterPoint(NewField, BackAndScore.GetField(), GreenPoint, Color, TotalScore, TotalCount, StartLocation, StartPoint[RecordData[0]],
                          ColorTurn, Turn, Players);
         }
         if(i == 1){
             Color = 'b';
             Point *StartBlueLocation = new Point[1];
-            location.x = location.x + 9 * NewField[0][0].GetStep();
-            location.y = location.y + 9 * NewField[0][0].GetStep();
-            StarterPoint(NewField, BackAndScore.GetField(), BluePoint, Color, StartX, StartY, TotalScore, TotalCount, StartBlueLocation, location,
+            StarterPoint(NewField, BackAndScore.GetField(), BluePoint, Color, TotalScore, TotalCount, StartBlueLocation, StartPoint[RecordData[1]],
                          ColorTurn, Turn, Players);
+            delete[] StartBlueLocation;
         }
         if(i == 2){
             Color = 'r';
             Point *StartRedLocation = new Point[1];
-            location.x = Step / 2 + 4 + 9 * NewField[0][0].GetStep();
-            location.y = Step / 2 + 4;
-            StarterPoint(NewField, BackAndScore.GetField(), RedPoint, Color, StartX, StartY, TotalScore, TotalCount, StartRedLocation, location,
+            StarterPoint(NewField, BackAndScore.GetField(), RedPoint, Color, TotalScore, TotalCount, StartRedLocation, StartPoint[RecordData[2]],
                          ColorTurn, Turn, Players);
+            delete[] StartRedLocation;
         }
         if(i == 3){
             Color = 'o';
             Point *StartOrangeLocation = new Point[1];
-            location.y = Step / 2 + 4 + 9 * NewField[0][0].GetStep();
-            location.x = Step / 2 + 4;
-            StarterPoint(NewField, BackAndScore.GetField(), OrangePoint, Color, StartX, StartY, TotalScore, TotalCount, StartOrangeLocation, location,
+            StarterPoint(NewField, BackAndScore.GetField(), OrangePoint, Color, TotalScore, TotalCount, StartOrangeLocation, StartPoint[RecordData[3]],
                          ColorTurn, Turn, Players);
+            delete[] StartOrangeLocation;
         }
     }
 
        return true;
-}
-
-
-void HelloWorld::menuCloseCallback(Ref* pSender)
-{
-    Director::getInstance()->end();
-
-#if (CC_TARGET_PLATFORM == CC_PLATFORM_IOS)
-    exit(0);
-#endif
 }
