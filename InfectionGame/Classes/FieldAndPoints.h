@@ -200,13 +200,13 @@ void ChangeColor(ColorPoints** NewField, Sprite* Field, int Index1, int Index2, 
                             Field->removeChildByTag(i * 10 + j, false);
                             Field->removeChildByTag(i * 10000 + j * 1000 + 100, false);
                             SetSpriteWithClone(NewField, Field, j, i, ColoredPoint, TotalScore, TotalCount, Start, ColorTurn, Turn, Players);
-                            if(NewField[i][j].GetColor() == ColorTurn[0] && NewField[Index2][Index1].GetColor() != ColorTurn[0])
+                            if(NewField[i][j].GetColor() == ColorTurn[0] )
                                 --TotalScore[0];
-                            else if(NewField[i][j].GetColor() == ColorTurn[1] && NewField[Index2][Index1].GetColor() != ColorTurn[1])
+                            else if(NewField[i][j].GetColor() == ColorTurn[1])
                                 --TotalScore[1];
-                            else if(NewField[i][j].GetColor() == ColorTurn[2] && NewField[Index2][Index1].GetColor() != ColorTurn[2])
+                            else if(NewField[i][j].GetColor() == ColorTurn[2])
                                 --TotalScore[2];
-                            else if(NewField[i][j].GetColor() == ColorTurn[3] && NewField[Index2][Index1].GetColor() != ColorTurn[3])
+                            else if(NewField[i][j].GetColor() == ColorTurn[3])
                                 --TotalScore[3];
                             NewField[i][j].SetColor(ColorTurn[Turn[0] % Players]);
                             NewField[i][j].SetColorEmpty(true);

@@ -132,7 +132,7 @@ set(GAME_HEADERS
   Classes/AppDelegate.h
   Classes/HelloWorldScene.h
   ${PLATFORM_SPECIFIC_HEADERS}
-        Classes/GraphicsScene.cpp Classes/GraphicsScene.h Classes/coordinate.h Classes/FieldAndPoints.h Classes/Menu.h Classes/Field.h)
+        Classes/GraphicsScene.cpp Classes/GraphicsScene.h Classes/coordinate.h Classes/FieldAndPoints.h Classes/Menu.h Classes/Field.h Classes/Memento.h)
 
 if(GAME_HEADERS)
   if ( WIN32 )
