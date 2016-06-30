@@ -1,9 +1,10 @@
 //
 // Created by ilya on 5/5/16.
 //
+#include "GameScene.h"
 #include "cocos2d.h"
 #include "string"
-
+#include "Defenitions.h"
 
 #ifndef MYGAME_MENU_H
 #define MYGAME_MENU_H
@@ -30,11 +31,11 @@ GameEnviroment::GameEnviroment(Layer *Scene, int Players, Label** Score, int* Re
     visibleSize = Director::getInstance()->getVisibleSize();
     origin = Director::getInstance()->getVisibleOrigin();
 
-    BuildBackGround(Scene);
+  //  BuildBackGround(Scene);
     BuildEmptyFiled(Scene);
 
     int Step = Field->getContentSize().height / 10;
-    Label* Test = Label::createWithTTF(to_string(0), "/home/ilya/Infection/InfectionGame/Resources/fonts/Magneto-Bold.ttf",32);
+    Label* Test = Label::createWithTTF(to_string(0), "fonts/orange.ttf",32 * 3);
 
     Point* LabelPosition = new Point [4];
     LabelPosition[0] = {origin.x + Step, origin.y + Test->getContentSize().height};
@@ -47,18 +48,28 @@ GameEnviroment::GameEnviroment(Layer *Scene, int Players, Label** Score, int* Re
 
 
 // создаем фон
+
 void GameEnviroment::BuildBackGround(Layer* Scene) {
     Background = Sprite::create("background.png");
     Background->setPosition(Point(visibleSize.width / 2 + origin.x, visibleSize.height / 2 + origin.y));
     Background->setScaleX(visibleSize.width / Background->getContentSize().width);
     Background->setScaleY(visibleSize.height / Background->getContentSize().height);
     Scene->addChild(Background,0);
+    
+
 }
 
+
 //задем пустое поле
+/*
+auto Field = Sprite::create("TriangleField.png");
+Field->setPosition(Point(visibleSize.width / 2 + origin.x, visibleSize.height / 2 + origin.y));
+this->addChild(Field);
+const cocos2d::Vec2 ddd = Field->getPosition();
+*/
 void GameEnviroment::BuildEmptyFiled(Layer *Scene) {
-    Field = Sprite::create("EmptyField.png");
-    Field->setScale(0.5);
+    Field = Sprite::create("RectangleField.png");
+    Field->setScale(1);
     Field->setPosition(Point(visibleSize.width / 2 + origin.x, visibleSize.height / 2 + origin.y));
     Scene->addChild(Field);
 }
@@ -75,7 +86,7 @@ void GameEnviroment::BuildScore(Layer *Scene, int Players, Point* Positions, Lab
         }
         Record[i] = WhatPosition;
         ++Score[i];
-        Score[i] = Label::createWithTTF(to_string(1),"/home/ilya/Infection/InfectionGame/Resources/fonts/Magneto-Bold.ttf",32);
+        Score[i] = Label::createWithTTF(to_string(1),"fonts/orange.ttf",32 * 3);
         Score[i]->setPosition(Positions[WhatPosition]);
         if(WhatColor[i] == 'g')
             Score[i]->setColor(ccc3(0,255,0));

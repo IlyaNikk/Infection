@@ -1,10 +1,4 @@
 #include "HelloWorldScene.h"
-#include <string>
-#include <FieldAndPoints.h>
-#include "Menu.h"
-#include "Field.h"
-
-using namespace std;
 
 USING_NS_CC;
 
@@ -26,76 +20,67 @@ Scene* HelloWorld::createScene()
 // on "init" you need to initialize your instance
 bool HelloWorld::init()
 {
+    //////////////////////////////
     // 1. super init first
     if ( !Layer::init() )
     {
         return false;
     }
+    
+    Size visibleSize = Director::getInstance()->getVisibleSize();
+    Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
-    int Players = 2;
-    int* TotalScore = new int [4]{0,0,0,0};
-    Label** TotalCount = new Label* [4];
-    int* RecordData = new int [Players]{};
-    char* ColorTurn = new char [4]{'g','b','r','o'};
+    /////////////////////////////
+    // 2. add a menu item with "X" image, which is clicked to quit the program
+    //    you may modify it.
 
-    GameEnviroment BackAndScore(this, Players, TotalCount, RecordData, ColorTurn);
+    // add a "close" icon to exit the progress. it's an autorelease object
+    auto closeItem = MenuItemImage::create(
+                                           "CloseNormal.png",
+                                           "CloseSelected.png",
+                                           CC_CALLBACK_1(HelloWorld::menuCloseCallback, this));
+    
+	closeItem->setPosition(Vec2(origin.x + visibleSize.width - closeItem->getContentSize().width/2 ,
+                                origin.y + closeItem->getContentSize().height/2));
 
-    for(int i = 0; i < Players; ++i)
-        ++TotalScore[i];
-//рандомно генерируем пустые фишки
-    int Step = BackAndScore.GetField()->getContentSize().height / 10;
-    int* StartX = new int [1];
-    StartX[0] = Step / 2 + 4;
-    int* StartY = new int [1];
-    StartY[0] = Step / 2 + 4;
-    ColorPoints** NewField = Field::getInstance(Step, BackAndScore.GetField(), StartX[0], StartY[0]);
+    // create menu, it's an autorelease object
+    auto menu = Menu::create(closeItem, NULL);
+    menu->setPosition(Vec2::ZERO);
+    this->addChild(menu, 1);
 
-    Point* StartPoint = new Point [4];
-    StartPoint[0] = {(float)Step / 2 + 4, (float)Step / 2 + 4};
-    StartPoint[1] = {(float)Step / 2 + 4 + 9 * Step, (float)Step / 2 + 4 + 9 * Step};
-    StartPoint[2] = {(float)Step / 2 + 4 + 9 * Step, (float)Step / 2 + 4};
-    StartPoint[3] = {(float)Step / 2 + 4, (float)Step / 2 + 4 + 9 * Step};
+    /////////////////////////////
+    // 3. add your codes below...
 
-//задаем счет для синего и зеленого игрока
+    // add a label shows "Hello World"
+    // create and initialize a label
+    
+    auto label = Label::createWithTTF("Hello World", "fonts/Marker Felt.ttf", 24);
+    
+    // position the label on the center of the screen
+    label->setPosition(Vec2(origin.x + visibleSize.width/2,
+                            origin.y + visibleSize.height - label->getContentSize().height));
 
-    Point location = Point(Step / 2 + 4, Step / 2 + 4);
-    int* Turn = new int [1]();
+    // add the label as a child to this layer
+    this->addChild(label, 1);
 
-    //ставим зеленную фишку
-    auto GreenPoint = Sprite::create("Green.png");
-    auto BluePoint = Sprite::create("Blue.png");
-    auto RedPoint = Sprite::create("Red.png");
-    auto OrangePoint = Sprite::create("Orange.png");
-    Point* StartLocation = new Point [1];
-    char Color ;
-    for(int i = 0; i < Players; ++i) {
-        if(i == 0) {
-            Color = 'g';
-            StarterPoint(NewField, BackAndScore.GetField(), GreenPoint, Color, TotalScore, TotalCount, StartLocation, StartPoint[RecordData[0]],
-                         ColorTurn, Turn, Players);
-        }
-        if(i == 1){
-            Color = 'b';
-            Point *StartBlueLocation = new Point[1];
-            StarterPoint(NewField, BackAndScore.GetField(), BluePoint, Color, TotalScore, TotalCount, StartBlueLocation, StartPoint[RecordData[1]],
-                         ColorTurn, Turn, Players);
-            delete[] StartBlueLocation;
-        }
-        if(i == 2){
-            Color = 'r';
-            Point *StartRedLocation = new Point[1];
-            StarterPoint(NewField, BackAndScore.GetField(), RedPoint, Color, TotalScore, TotalCount, StartRedLocation, StartPoint[RecordData[2]],
-                         ColorTurn, Turn, Players);
-            delete[] StartRedLocation;
-        }
-        if(i == 3){
-            Color = 'o';
-            Point *StartOrangeLocation = new Point[1];
-            StarterPoint(NewField, BackAndScore.GetField(), OrangePoint, Color, TotalScore, TotalCount, StartOrangeLocation, StartPoint[RecordData[3]],
-                         ColorTurn, Turn, Players);
-            delete[] StartOrangeLocation;
-        }
-    }
+    // add "HelloWorld" splash screen"
+    auto sprite = Sprite::create("HelloWorld.png");
 
-       return true;
+    // position the sprite on the center of the screen
+    sprite->setPosition(Vec2(visibleSize.width/2 + origin.x, visibleSize.height/2 + origin.y));
+
+    // add the sprite as a child to this layer
+    this->addChild(sprite, 0);
+    
+    return true;
+}
+
+
+void HelloWorld::menuCloseCallback(Ref* pSender)
+{
+    Director::getInstance()->end();
+
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_IOS)
+    exit(0);
+#endif
 }

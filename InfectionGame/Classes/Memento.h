@@ -41,16 +41,16 @@ Memento::~Memento() {
 }
 
 ColorPoints** Memento::RebuildField(Sprite* FieldBack){
-
+    
     Point* StartLocation = new Point [1];
-
+    
     auto GreenPoint = Sprite::create("Green.png");
     auto BluePoint = Sprite::create("Blue.png");
     auto RedPoint = Sprite::create("Red.png");
     auto OrangePoint = Sprite::create("Orange.png");
-
+    
     char* ColorTurn = new char [4]{'g','b','r','o'};
-
+    
     for(int i = 0; i < 10; ++i){
         for(int j = 0; j < 10;++j) {
             if (!Field[0][0].GetEmpty()) {

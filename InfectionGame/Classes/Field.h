@@ -3,7 +3,7 @@
 //
 
 #include "cocos2d.h"
-#include "FieldAndPoints.h"
+#include "FieldAndPoints2.h"
 
 #ifndef MYGAME_FIELD_H
 #define MYGAME_FIELD_H
@@ -16,17 +16,17 @@ class FieldDestroyer
 {
 private:
     Field* p_instance;
-    ColorPoints** NewField;
+    ColorPoints2** NewField;
 public:
     ~FieldDestroyer();
-    void initialize( Field* p, ColorPoints** ThisField);
+    void initialize( Field* p, ColorPoints2** ThisField);
 };
 
 class Field
 {
 private:
     static Field* p_instance ;
-    static ColorPoints** BuildedField;
+    static ColorPoints2** BuildedField;
     static FieldDestroyer destroyer;
 protected:
     Field() ;
@@ -35,13 +35,13 @@ protected:
     ~Field() { }
     friend class FieldDestroyer;
 public:
-    static ColorPoints** getInstance(int Step, Sprite* SpriteField, int StartX, int StartY);
+    static ColorPoints2** getInstance(int Step, Sprite* SpriteField, int StartX, int StartY);
 };
 
-void BuildField(ColorPoints** NewField, int Step, Sprite* SpriteField, int StartX, int StartY);
+void BuildField(ColorPoints2** NewField, int Step, Sprite* SpriteField, int StartX, int StartY);
 
 Field* Field::p_instance = 0;
-ColorPoints** Field::BuildedField = 0;
+ColorPoints2** Field::BuildedField = 0;
 FieldDestroyer Field::destroyer;
 
 FieldDestroyer::~FieldDestroyer() {
@@ -51,12 +51,12 @@ FieldDestroyer::~FieldDestroyer() {
 
 }
 
-void FieldDestroyer::initialize( Field* p , ColorPoints** ThisField) {
+void FieldDestroyer::initialize( Field* p , ColorPoints2** ThisField) {
     p_instance = p;
     NewField = ThisField;
 }
 
-ColorPoints** Field::getInstance(int Step, Sprite* SpriteField, int StartX, int StartY) {
+ColorPoints2** Field::getInstance(int Step, Sprite* SpriteField, int StartX, int StartY) {
     if(!p_instance)     {
         p_instance = new Field ();
         BuildField(Field::BuildedField, Step, SpriteField, StartX, StartY);
@@ -66,12 +66,12 @@ ColorPoints** Field::getInstance(int Step, Sprite* SpriteField, int StartX, int 
 }
 
 Field::Field() {
-    Field::BuildedField = new ColorPoints* [10];
+    Field::BuildedField = new ColorPoints2* [10];
     for(int i = 0; i < 10; ++i)
-        Field::BuildedField[i] = new ColorPoints [10];
+        Field::BuildedField[i] = new ColorPoints2 [10];
 }
 
-void BuildField(ColorPoints** NewField, int Step, Sprite* Field, int StartX, int StartY){
+void BuildField(ColorPoints2** NewField, int Step, Sprite* Field, int StartX, int StartY){
     int Start = StartX;
     for(int i = 0; i < 10; ++i) {
         int None = rand() % 10;
