@@ -123,16 +123,44 @@ if ( WIN32 )
 endif( WIN32 )
 
 set(GAME_SRC
-  Classes/AppDelegate.cpp
-  Classes/HelloWorldScene.cpp
-  ${PLATFORM_SPECIFIC_SRC}
-        Classes/GraphicsScene.cpp Classes/GraphicsScene.h)
+        Classes/AppDelegate.cpp
+        Classes/HelloWorldScene.cpp
+        Classes/ChoosePlayers.cpp
+        Classes/GameOverScene.cpp
+        Classes/GameRoundScene.cpp
+        Classes/GameTriangleScene.cpp
+        Classes/GameScene.cpp
+        Classes/GraphicsScene.cpp
+        Classes/MainMenu.cpp
+        Classes/MainMenuScene.cpp
+        Classes/Rules.cpp
+        Classes/SplashScene.cpp
+        ${PLATFORM_SPECIFIC_SRC}
+        )
 
 set(GAME_HEADERS
-  Classes/AppDelegate.h
-  Classes/HelloWorldScene.h
-  ${PLATFORM_SPECIFIC_HEADERS}
-        Classes/GraphicsScene.cpp Classes/GraphicsScene.h Classes/coordinate.h Classes/FieldAndPoints.h Classes/Menu.h Classes/Field.h Classes/Memento.h)
+        Classes/AppDelegate.h
+        Classes/HelloWorldScene.h
+        Classes/ChoosePlayers.h
+        Classes/Defenitions.h
+        Classes/Field.h
+        Classes/FieldAndPoints.h
+        Classes/FieldAndPoints2.h
+        Classes/FieldAndPoints3.h
+        Classes/GameOverScene.h
+        Classes/GameRoundScene.h
+        Classes/GameScene.h
+        Classes/GameTriangleScene.h
+        Classes/GraphicsScene.h
+        Classes/MainMenu.h
+        Classes/MainMenuScene.h
+        Classes/Memento.h
+        Classes/Menu.h
+        Classes/Players.h
+        Classes/Rules.h
+        Classes/SplashScene.h
+        ${PLATFORM_SPECIFIC_HEADERS}
+        )
 
 if(GAME_HEADERS)
   if ( WIN32 )
